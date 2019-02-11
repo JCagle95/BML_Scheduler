@@ -178,10 +178,8 @@ function sendEmail() {
         var now = new Date();
         var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
         var weekNumber = Math.floor(((now - fullYear) / 1000 / 60 / 60 / 24 + fullYear.getDay()) / 7) + 1;
-        var textString = "Hello everyone,\n\nAgenda for " + (now.getMonth()+1) + "/" + now.getDate() + "/" + now.getUTCFullYear() + ":\n"
         var weekDay = now.getDay()
-
-        if (weekDay != 0) return;
+        var textString = "Hello everyone,\n\nAgenda for " + (now.getMonth()+1) + "/" + now.getDate() + "/" + now.getUTCFullYear() + " Weekday " + weekDay + ":\n"
 
         try {
             var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
