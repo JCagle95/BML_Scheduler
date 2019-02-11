@@ -10,7 +10,7 @@ var app = express();
 
 // Login / Sessions
 app.set('mongodb', process.env.MONGODB_URI);
-app.set('database', 'bml_meeting');
+app.set('database', 'bml-meeting');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
