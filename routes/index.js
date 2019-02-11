@@ -25,8 +25,8 @@ router.post('/add', function(req, res, next) {
         var collection = db.collection("schedule");
 
         var now = new Date();
-        var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 0));
-        var weekNumber = Math.floor((now - fullYear) / 1000 / 60 / 60 / 24 / 7);
+        var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+        var weekNumber = Math.floor(((now - fullYear) / 1000 / 60 / 60 / 24 + fullYear.getDay()) / 7) + 1;
 
         try {
             var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
@@ -38,7 +38,7 @@ router.post('/add', function(req, res, next) {
                 currentList.push(req.body.text);
                 collection.updateOne({year: now.getUTCFullYear(), week: weekNumber}, { $set: {scheduleList: currentList}});
             }
-            res.send({ text: "The schedule for week Number " + weekNumber + " of year " + now.getUTCFullYear() + " is updated." });
+            res.send({ text: "The schedule for week " + weekNumber + " of year " + now.getUTCFullYear() + " is updated." });
         } catch(err) {
             console.log(err);
             res.send({text: "Error fetching schedules"});
@@ -63,17 +63,17 @@ router.post('/list', function(req, res, next) {
         var collection = db.collection("schedule");
 
         var now = new Date();
-        var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 0));
-        var weekNumber = Math.floor((now - fullYear) / 1000 / 60 / 60 / 24 / 7);
+        var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+        var weekNumber = Math.floor(((now - fullYear) / 1000 / 60 / 60 / 24 + fullYear.getDay()) / 7) + 1;
 
         try {
             var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
             if (result == null) {
                 res.send({ text: "The schedule for week Number " + weekNumber + " of year " + now.getUTCFullYear() + " is not created yet." });
             } else {
-                var replyString = ""
+                var replyString = "The following are the meeting schedules (not to order):\n"
                 for (i = 0; i < result.scheduleList.length; i++) {
-                    replyString = replyString + i + ": " + result.scheduleList[i] + "\n";
+                    replyString = replyString + "\t" + (i+1) + ": " + result.scheduleList[i] + "\n";
                 }
                 res.send({ text: replyString });
             }
