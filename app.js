@@ -8,6 +8,10 @@ var indexRouter = require('./routes/index');
 
 var app = express();
 
+// Login / Sessions
+app.set('mongodb', process.env.MONGODB_URI);
+app.set('database', 'bml_meeting');
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
