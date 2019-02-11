@@ -13,7 +13,8 @@ router.post('/add', function(req, res, next) {
 
     var url = req.app.get('mongodb');
     var database = req.app.get('database');
-
+    res.send({ text: url });
+    /*
     mongodb.connect(url, { useNewUrlParser: true }, async function(err, client) {
         if (err) {
             console.log("Error Connecting to Database");
@@ -26,6 +27,7 @@ router.post('/add', function(req, res, next) {
 
         res.send({ text: 'This is a testing reply' });
     });
+    */
 });
 
 module.exports = router;
