@@ -165,4 +165,56 @@ router.post('/interact', function(req, res, next) {
     }
 });
 
+function sendEmail() {
+    var url = process.env.MONGODB_URI;
+    var database = 'bml-meeting';
+    var nodeoutlook = require('nodejs-nodemailer-outlook')
+
+    mongodb.connect(url, { useNewUrlParser: true }, async function(err, client) {
+        if (err) {
+            console.log("Error Connecting to Database");
+            return;
+        }
+
+        var db = client.db(database);
+        var collection = db.collection("schedule");
+
+        var now = new Date();
+        var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+        var weekNumber = Math.floor(((now - fullYear) / 1000 / 60 / 60 / 24 + fullYear.getDay()) / 7) + 1;
+
+        try {
+            var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
+            if (result == null) {
+                nodeoutlook.sendEmail({
+                    auth: {
+                        user: "jcagle@ufl.edu",
+                        pass: process.env.MAILPASS
+                    }, from: "jcalge@ufl.edu",
+                    to: ["boredkuma@gmail.com", "jackson.cagle@gmail.com"],
+                    subject: "Brain Mapping Lab Weekly Meeting Agenda",
+                    text: "This is the test email"
+                });
+            } else {
+                nodeoutlook.sendEmail({
+                    auth: {
+                        user: "jcagle@ufl.edu",
+                        pass: process.env.MAILPASS
+                    }, from: "jcalge@ufl.edu",
+                    to: ["boredkuma@gmail.com", "jackson.cagle@gmail.com"],
+                    subject: "Brain Mapping Lab Weekly Meeting Agenda",
+                    text: "This is the test email"
+                });
+                console.log("Email Sent")
+            }
+            return;
+        } catch(err) {
+            console.log(err);
+            return;
+        }
+    });
+}
+
+setInterval(sendEmail, 1000*60);
+
 module.exports = router;
