@@ -17,7 +17,7 @@ router.post('/add', function(req, res, next) {
     mongodb.connect(url, { useNewUrlParser: true }, async function(err, client) {
         if (err) {
             console.log("Error Connecting to Database");
-            res.send({text: err});
+            res.send({text: url});
             return;
         }
 
