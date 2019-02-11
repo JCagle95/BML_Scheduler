@@ -88,4 +88,9 @@ router.post('/list', function(req, res, next) {
 
 });
 
+/* GET home page. */
+router.post('/interact', function(req, res, next) {
+    res.send(req.body.challenge);
+});
+
 module.exports = router;
