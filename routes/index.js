@@ -11,19 +11,6 @@ var options = {
     }
 }
 
-var sendRequest = http.request(options, function (res) {
-    var responseString = "";
-
-    res.on("data", function (data) {
-        responseString += data;
-        // save all the data from response
-    });
-    res.on("end", function () {
-        console.log(responseString);
-        // print to console when response ends
-    });
-});
-
 var mongodb = require('mongodb').MongoClient;
 var ObjectID = require('mongodb').ObjectID;
 
@@ -130,12 +117,26 @@ router.post('/interact', function(req, res, next) {
     var botToken = req.app.get('bot-token');
 
     if (payload.event.type === "app_mention") {
+        var sendRequest = http.request(options, function (res) {
+            var responseString = "";
+
+            res.on("data", function (data) {
+                responseString += data;
+                // save all the data from response
+            });
+            res.on("end", function () {
+                console.log(responseString);
+                // print to console when response ends
+            });
+        });
+
         var resBody = {
             "token": botToken,
             "channel": payload.event.item.channel,
             "text": "Hello World!"
         }
         sendRequest.write(resBody);
+        sendRequest.end();
     }
 });
 
