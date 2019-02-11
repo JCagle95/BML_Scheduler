@@ -35,7 +35,7 @@ router.post('/add', function(req, res, next) {
                 collection.insertOne({year: now.getUTCFullYear(), week: weekNumber, scheduleList: currentList});
             } else {
                 var currentList = result.scheduleList;
-                currentList.append(req.body.text);
+                currentList.push(req.body.text);
                 collection.updateOne({year: now.getUTCFullYear(), week: weekNumber}, { $set: {scheduleList: currentList}});
             }
             res.send({ text: "The schedule for week Number " + weekNumber + " of year " + now.getUTCFullYear() + " is updated." });
@@ -71,7 +71,11 @@ router.post('/list', function(req, res, next) {
             if (result == null) {
                 res.send({ text: "The schedule for week Number " + weekNumber + " of year " + now.getUTCFullYear() + " is not created yet." });
             } else {
-                res.send({ text: ["Trying a list", "What would happen like this?"] });
+                var replyString = ""
+                for (i = 0; i < result.scheduleList.length; i++) {
+                    replyString = replyString + i + ": " + result.scheduleList[i] + "\n";
+                }
+                res.send({ text: replyString });
             }
             return;
         } catch(err) {
