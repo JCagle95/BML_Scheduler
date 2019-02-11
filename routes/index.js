@@ -35,14 +35,12 @@ router.post('/', function(req, res, next) {
     var botToken = req.app.get('bot-token');
 
     if (payload.event.type === "app_mention") {
-        if (payload.event.text.includes("add schedule")) {
-            var resBody = {
-                "token": botToken,
-                "channel": payload.event.item.channel,
-                "text": "Hello World!"
-            }
-            sendRequest.write(resBody);
+        var resBody = {
+            "token": botToken,
+            "channel": payload.event.item.channel,
+            "text": "Hello World!"
         }
+        sendRequest.write(resBody);
     }
 });
 
@@ -132,14 +130,12 @@ router.post('/interact', function(req, res, next) {
     var botToken = req.app.get('bot-token');
 
     if (payload.event.type === "app_mention") {
-        if (payload.event.text.includes("add schedule")) {
-            var resBody = {
-                "token": botToken,
-                "channel": payload.event.item.channel,
-                "text": "Hello World!"
-            }
-            sendRequest.write(resBody);
+        var resBody = {
+            "token": botToken,
+            "channel": payload.event.item.channel,
+            "text": "Hello World!"
         }
+        sendRequest.write(resBody);
     }
 });
 
