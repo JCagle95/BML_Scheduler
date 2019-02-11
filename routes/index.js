@@ -15,20 +15,8 @@ var mongodb = require('mongodb').MongoClient;
 var ObjectID = require('mongodb').ObjectID;
 
 /* GET home page. */
-router.post('/', function(req, res, next) {
-    let payload = req.body;
-    res.sendStatus(200);
-
-    var botToken = req.app.get('bot-token');
-
-    if (payload.event.type === "app_mention") {
-        var resBody = {
-            "token": botToken,
-            "channel": payload.event.item.channel,
-            "text": "Hello World!"
-        }
-        sendRequest.write(resBody);
-    }
+router.get('/', function(req, res, next) {
+    res.send("Hello World")
 });
 
 router.post('/add', function(req, res, next) {
@@ -168,7 +156,15 @@ router.post('/interact', function(req, res, next) {
 function sendEmail() {
     var url = process.env.MONGODB_URI;
     var database = 'bml-meeting';
-    var nodeoutlook = require('nodejs-nodemailer-outlook')
+    var mailer = require('nodemailer')
+
+    var transporter = mailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: "caglejackson@gmail.com",
+            pass: process.env.MAILPASS
+        }
+    });
 
     mongodb.connect(url, { useNewUrlParser: true }, async function(err, client) {
         if (err) {
@@ -182,29 +178,48 @@ function sendEmail() {
         var now = new Date();
         var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
         var weekNumber = Math.floor(((now - fullYear) / 1000 / 60 / 60 / 24 + fullYear.getDay()) / 7) + 1;
+        var textString = "Hello everyone,\n\nAgenda for " + (now.getMonth()+1) + "/" + now.getDate() + "/" + now.getUTCFullYear() + ":\n"
+        var weekDay = now.getDay()
+
+        if (weekDay != 0) return;
 
         try {
             var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
+            var targetList = await collection.findOne({mailList: "target"});
             if (result == null) {
-                nodeoutlook.sendEmail({
-                    auth: {
-                        user: "jcagle@ufl.edu",
-                        pass: process.env.MAILPASS
-                    }, from: "jcalge@ufl.edu",
-                    to: ["boredkuma@gmail.com", "jackson.cagle@gmail.com"],
+                textString += "1. No update for this week\n\n"
+                var mailOptions = {
+                    from: "jcalge@ufl.edu",
+                    to: targetList.emailAddress,
                     subject: "Brain Mapping Lab Weekly Meeting Agenda",
-                    text: "This is the test email"
-                });
+                    text: textString + "Let me know if you would like to be added to the agenda.\n\nMay everyone have a good weekend!\n\nSincerely,\nJackson Cagle"
+                }
+
+                transporter.sendMail(mailOptions, function (err, info) {
+                    if (err) {
+                        console.log(err)
+                    }
+                })
             } else {
-                nodeoutlook.sendEmail({
-                    auth: {
-                        user: "jcagle@ufl.edu",
-                        pass: process.env.MAILPASS
-                    }, from: "jcalge@ufl.edu",
-                    to: ["boredkuma@gmail.com", "jackson.cagle@gmail.com"],
+                if (result.scheduleList.length == 0) {
+                    textString += "1. No update for this week\n\n"
+                } else {
+                    for (i = 0; i < result.scheduleList.length; i++) {
+                        textString += "\t" + (i+1) + ": " + result.scheduleList[i] + "\n";
+                    }
+                }
+                var mailOptions = {
+                    from: "jcalge@ufl.edu",
+                    to: targetList.emailAddress,
                     subject: "Brain Mapping Lab Weekly Meeting Agenda",
-                    text: "This is the test email"
-                });
+                    text: textString + "Let me know if you would like to be added to the agenda.\n\nMay everyone have a good weekend!\n\nSincerely,\nJackson Cagle"
+                }
+
+                transporter.sendMail(mailOptions, function (err, info) {
+                    if (err) {
+                        console.log(err)
+                    }
+                })
                 console.log("Email Sent")
             }
             return;
@@ -215,6 +230,6 @@ function sendEmail() {
     });
 }
 
-setInterval(sendEmail, 1000*60);
+setInterval(sendEmail, 1000*60*60*24);
 
 module.exports = router;
