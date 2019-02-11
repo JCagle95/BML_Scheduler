@@ -1,34 +1,12 @@
 var express = require('express');
 var router = express.Router();
 
-var http = require('http');
-var options = {
-    host: "https://slack.com",
-    path: "/api/chat.postMessage",
-    method: "POST",
-    headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-}
-
 var mongodb = require('mongodb').MongoClient;
 var ObjectID = require('mongodb').ObjectID;
 
 /* GET home page. */
 router.post('/', function(req, res, next) {
-    let payload = req.body;
-    res.sendStatus(200);
 
-    var botToken = req.app.get('bot-token');
-
-    if (payload.event.type === "app_mention") {
-        var resBody = {
-            "token": botToken,
-            "channel": payload.event.item.channel,
-            "text": "Hello World!"
-        }
-        sendRequest.write(resBody);
-    }
 });
 
 router.post('/add', function(req, res, next) {
@@ -111,33 +89,7 @@ router.post('/list', function(req, res, next) {
 
 /* GET home page. */
 router.post('/interact', function(req, res, next) {
-    let payload = req.body;
-    res.sendStatus(200);
-
-    var botToken = req.app.get('bot-token');
-
-    if (payload.event.type === "app_mention") {
-        var sendRequest = http.request(options, function (res) {
-            var responseString = "";
-
-            res.on("data", function (data) {
-                responseString += data;
-                // save all the data from response
-            });
-            res.on("end", function () {
-                console.log(responseString);
-                // print to console when response ends
-            });
-        });
-
-        var resBody = {
-            "token": botToken,
-            "channel": payload.event.item.channel,
-            "text": "Hello World!"
-        }
-        sendRequest.write(resBody);
-        sendRequest.end();
-    }
+    
 });
 
 module.exports = router;
