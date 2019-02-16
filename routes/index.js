@@ -158,8 +158,6 @@ router.get('/sendEmail', function(req, res, next) {
     var database = 'bml-meeting';
     var mailer = require('nodemailer')
 
-    res.send("Success")
-
     var transporter = mailer.createTransport({
         service: "gmail",
         auth: {
@@ -181,7 +179,7 @@ router.get('/sendEmail', function(req, res, next) {
         var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
         var weekNumber = Math.floor(((now - fullYear) / 1000 / 60 / 60 / 24 + fullYear.getDay()) / 7) + 1;
         var weekDay = now.getDay()
-        var textString = "Hello everyone,\n\nAgenda for " + (now.getMonth()+1) + "/" + now.getDate() + "/" + now.getUTCFullYear() + " Weekday " + weekDay + ":\n"
+        var textString = "Hello everyone,\n\nAgenda for " + (now.getMonth()+1) + "/" + (now.getDate()+1) + "/" + now.getUTCFullYear() + " Weekday " + weekDay + ":\n"
 
         try {
             var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
@@ -198,6 +196,7 @@ router.get('/sendEmail', function(req, res, next) {
                 transporter.sendMail(mailOptions, function (err, info) {
                     if (err) {
                         console.log(err)
+                        res.send("Fail")
                     }
                 })
             } else {
@@ -218,13 +217,17 @@ router.get('/sendEmail', function(req, res, next) {
                 transporter.sendMail(mailOptions, function (err, info) {
                     if (err) {
                         console.log(err)
+                        res.send("Fail")
                     }
                 })
                 console.log("Email Sent")
+                res.send("Success")
+
             }
             return;
         } catch(err) {
             console.log(err);
+            res.send("Fail")
             return;
         }
     });
