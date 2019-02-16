@@ -158,6 +158,8 @@ router.get('/sendEmail', function(req, res, next) {
     var database = 'bml-meeting';
     var mailer = require('nodemailer')
 
+    res.send("Success")
+
     var transporter = mailer.createTransport({
         service: "gmail",
         auth: {
@@ -187,7 +189,7 @@ router.get('/sendEmail', function(req, res, next) {
             if (result == null) {
                 textString += "1. No update for this week\n\n"
                 var mailOptions = {
-                    from: "jcalge@ufl.edu",
+                    from: "jcagle@ufl.edu",
                     to: targetList.emailAddress,
                     subject: "Brain Mapping Lab Weekly Meeting Agenda",
                     text: textString + "Let me know if you would like to be added to the agenda.\n\nMay everyone have a good weekend!\n\nSincerely,\nJackson Cagle"
