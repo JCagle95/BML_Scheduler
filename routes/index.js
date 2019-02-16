@@ -153,7 +153,7 @@ router.post('/interact', function(req, res, next) {
     }
 });
 
-function sendEmail() {
+router.get('/sendEmail', function(req, res, next) {
     var url = process.env.MONGODB_URI;
     var database = 'bml-meeting';
     var mailer = require('nodemailer')
@@ -226,8 +226,6 @@ function sendEmail() {
             return;
         }
     });
-}
-
-setInterval(sendEmail, 1000*60*60*24);
+})
 
 module.exports = router;
