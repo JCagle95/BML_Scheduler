@@ -153,6 +153,87 @@ router.post('/interact', function(req, res, next) {
     }
 });
 
+router.get('/sendEmailOfficial', function(req, res, next) {
+    var url = process.env.MONGODB_URI;
+    var database = 'bml-meeting';
+    var mailer = require('nodemailer')
+
+    var transporter = mailer.createTransport({
+        service: "gmail",
+        auth: {
+            user: "caglejackson@gmail.com",
+            pass: process.env.MAILPASS
+        }
+    });
+
+    mongodb.connect(url, { useNewUrlParser: true }, async function(err, client) {
+        if (err) {
+            console.log("Error Connecting to Database");
+            return;
+        }
+
+        var db = client.db(database);
+        var collection = db.collection("schedule");
+
+        var now = new Date();
+        var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+        var weekNumber = Math.floor(((now - fullYear) / 1000 / 60 / 60 / 24 + fullYear.getDay()) / 7) + 1;
+        var weekDay = now.getDay()
+        var textString = "Hello everyone,\n\nAgenda for " + (now.getMonth()+1) + "/" + (now.getDate()+1) + "/" + now.getUTCFullYear() + ":\n"
+
+        try {
+            var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
+            var targetList = await collection.findOne({mailList: "targetOfficial"});
+            if (result == null) {
+                textString += "1. No update for this week\n\n"
+                var mailOptions = {
+                    from: "jcagle@ufl.edu",
+                    to: targetList.emailAddress,
+                    subject: "Brain Mapping Lab Weekly Meeting Agenda",
+                    text: textString + "Let me know if you would like to be added to the agenda.\n\nMay everyone have a good weekend!\n\nSincerely,\nJackson Cagle"
+                }
+
+                transporter.sendMail(mailOptions, function (err, info) {
+                    if (err) {
+                        console.log(err)
+                        res.send("Fail")
+                    }
+                })
+            } else {
+                if (result.scheduleList.length == 0) {
+                    textString += "1. No update for this week\n\n"
+                } else {
+                    for (i = 0; i < result.scheduleList.length; i++) {
+                        textString += "\t" + (i+1) + ": " + result.scheduleList[i] + "\n";
+                    }
+                }
+                var mailOptions = {
+                    from: "jcalge@ufl.edu",
+                    to: targetList.emailAddress,
+                    subject: "Brain Mapping Lab Weekly Meeting Agenda",
+                    text: textString + "Let me know if you would like to be added to the agenda.\n\nMay everyone have a good weekend!\n\nSincerely,\nJackson Cagle"
+                }
+
+                transporter.sendMail(mailOptions, function (err, info) {
+                    if (err) {
+                        console.log(err)
+                        res.send("Fail")
+                    } else {
+                        console.log(info)
+                    }
+                })
+                console.log("Email Sent")
+                res.send("Success")
+            }
+            return;
+        } catch(err) {
+            console.log(err);
+            res.send("Fail")
+            return;
+        }
+    });
+})
+
 router.get('/sendEmail', function(req, res, next) {
     var url = process.env.MONGODB_URI;
     var database = 'bml-meeting';
@@ -218,11 +299,12 @@ router.get('/sendEmail', function(req, res, next) {
                     if (err) {
                         console.log(err)
                         res.send("Fail")
+                    } else {
+                        console.log(info)
                     }
                 })
                 console.log("Email Sent")
                 res.send("Success")
-
             }
             return;
         } catch(err) {
