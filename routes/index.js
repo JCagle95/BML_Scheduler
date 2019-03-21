@@ -58,8 +58,6 @@ router.post('/subscribe', function(req, res, next) {
             return;
         }
     });
-
-    console.log(confirmationEmailLink);
   });
   res.render("confirmation", {title: "Confirmation Email Sent!", text: "An email with confirmation link is sent to the email address you provided. The link will be valid for 24 hours. Please confirm before expiration."});
 });
