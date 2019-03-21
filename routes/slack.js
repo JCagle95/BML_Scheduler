@@ -1,18 +1,22 @@
 var express = require('express');
 var router = express.Router();
 
-var http = require('http');
-var options = {
-    host: "https://hooks.slack.com",
-    path: "/services/TFN0FTKNJ/BG37YHYAC/BbYcLAk2782RINmrw9WrFRpi",
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    }
-}
-
 var mongodb = require('mongodb').MongoClient;
 var ObjectID = require('mongodb').ObjectID;
+
+function getWeekNumber(d) {
+    // Copy date so don't modify original
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    // Set to nearest Thursday: current date + 4 - current day number
+    // Make Sunday's day number 7
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    // Get first day of year
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    // Calculate full weeks to nearest Thursday
+    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+    // Return array of year and week number
+    return [d.getUTCFullYear(), weekNo];
+}
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -34,8 +38,7 @@ router.post('/add', function(req, res, next) {
         var collection = db.collection("schedule");
 
         var now = new Date();
-        var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-        var weekNumber = Math.floor(((now - fullYear) / 1000 / 60 / 60 / 24 + fullYear.getDay()) / 7) + 1;
+        var weekNumber = getWeekNumber(now);
 
         try {
             var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
@@ -72,8 +75,7 @@ router.post('/list', function(req, res, next) {
         var collection = db.collection("schedule");
 
         var now = new Date();
-        var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-        var weekNumber = Math.floor(((now - fullYear) / 1000 / 60 / 60 / 24 + fullYear.getDay()) / 7) + 1;
+        var weekNumber = getWeekNumber(now);
 
         try {
             var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
@@ -112,8 +114,7 @@ router.post('/remove', function(req, res, next) {
         var collection = db.collection("schedule");
 
         var now = new Date();
-        var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-        var weekNumber = Math.floor(((now - fullYear) / 1000 / 60 / 60 / 24 + fullYear.getDay()) / 7) + 1;
+        var weekNumber = getWeekNumber(now);
 
         try {
             var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
@@ -161,7 +162,7 @@ router.get('/sendEmail', function(req, res, next) {
     var transporter = mailer.createTransport({
         service: "gmail",
         auth: {
-            user: "caglejackson@gmail.com",
+            user: "brainmappingmac@gmail.com",
             pass: process.env.MAILPASS
         }
     });
@@ -176,8 +177,7 @@ router.get('/sendEmail', function(req, res, next) {
         var collection = db.collection("schedule");
 
         var now = new Date();
-        var fullYear = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-        var weekNumber = Math.floor(((now - fullYear) / 1000 / 60 / 60 / 24 + fullYear.getDay()) / 7) + 1;
+        var weekNumber = getWeekNumber(now);
         var weekDay = now.getDay()
         var textString = "Hello everyone,\n\nAgenda for " + (now.getMonth()+1) + "/" + (now.getDate()+1) + "/" + now.getUTCFullYear() + " Weekday " + weekDay + ":\n"
 
@@ -187,7 +187,7 @@ router.get('/sendEmail', function(req, res, next) {
             if (result == null) {
                 textString += "1. No update for this week\n\n"
                 var mailOptions = {
-                    from: "jcagle@ufl.edu",
+                    from: "Brain Mapping Lab",
                     to: targetList.emailAddress,
                     subject: "Brain Mapping Lab Weekly Meeting Agenda",
                     text: textString + "Let me know if you would like to be added to the agenda.\n\nMay everyone have a good weekend!\n\nSincerely,\nJackson Cagle"

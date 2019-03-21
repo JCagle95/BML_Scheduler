@@ -11,21 +11,21 @@ html
     div.wrapper
       div.inner
         form(action=actionPath, method="POST")
-          h3 Join Meeting Email Listserv
+          h3= title
           p.
-            This registration form is made to simplify the process of joining the Brain Mapping Laboratory
-            / UF Norman Fixel Institute for Neurological Diseases Movement Disorders & Neurorestoration Program.
-            Please provide your name and email, a confirmation email will be sent to your email address to ensure email address is correct.
+            #{text}
             <br>
             <br>
             Sincerely,
             <br>
             Jackson Cagle
 
-          label.form-group
-            input.form-control(type="text",name="username",required)
-            span Your Name
-            span.border
+          if actionPath == "/subscribe"
+            label.form-group
+              input.form-control(type="text",name="username",required)
+              span Your Name
+              span.border
+
           label.form-group
             input.form-control(type="email",name="email",required)
             span Your Email Address
