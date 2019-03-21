@@ -47,10 +47,11 @@ router.post('/subscribe', function(req, res, next) {
 
     var mailOptions = {
         from: "Brain Mapping Lab Email Service",
-        to: req.body.emailAddress,
+        to: req.body.email,
         subject: "Confirmation of Brain Mapping Lab",
         text: "Greeting,\n\nThis email is a confirmation for your recent addition to Brain Mapping Lab Email Listserv. Please use the following link to confirm your acceptance into Brain Mapping Lab Meeting Agenda email listserv.\n\n" + confirmationEmailLink + "\n\nSincerely,"
     };
+
     transporter.sendMail(mailOptions, function (err, info) {
         if (err) {
             console.log(err);
@@ -58,6 +59,7 @@ router.post('/subscribe', function(req, res, next) {
             return;
         }
     });
+
   });
   res.render("confirmation", {title: "Confirmation Email Sent!", text: "An email with confirmation link is sent to the email address you provided. The link will be valid for 24 hours. Please confirm before expiration."});
 });
