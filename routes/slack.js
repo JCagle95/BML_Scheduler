@@ -159,7 +159,7 @@ function sendEmail() {
             var collection = db.collection("schedule");
             var result = await collection.findOne({year: weekNumber[0], week: weekNumber[1]});
             var collection = db.collection("listserv");
-            var targetList = await collection.findOne({valid: true}).toArray();
+            var targetList = await collection.find({valid: true}).toArray();
             emailAddress = new Array();
             for (i = 0; i < targetList.length; i++) {
                 emailAddress.push(targetList[i].Email);
