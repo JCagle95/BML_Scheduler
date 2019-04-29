@@ -130,7 +130,7 @@ router.post('/remove', function(req, res, next) {
     });
 });
 
-router.get('/sendEmail', function(req, res, next) {
+function sendEmail() {
     var url = process.env.MONGODB_URI;
     var database = 'bml-meeting';
     var mailer = require('nodemailer')
@@ -172,7 +172,7 @@ router.get('/sendEmail', function(req, res, next) {
                 transporter.sendMail(mailOptions, function (err, info) {
                     if (err) {
                         console.log(err)
-                        res.send("Fail")
+                        return -1;
                     }
                 })
             } else {
@@ -193,20 +193,30 @@ router.get('/sendEmail', function(req, res, next) {
                 transporter.sendMail(mailOptions, function (err, info) {
                     if (err) {
                         console.log(err)
-                        res.send("Fail")
+                        return -1;
                     }
                 })
                 console.log("Email Sent")
-                res.send("Success")
-
+                return 0;
             }
-            return;
+            return 0;
         } catch(err) {
             console.log(err);
-            res.send("Fail")
-            return;
+            return -1;
         }
     });
-})
+}
+
+router.get('/sendEmail', function(req, res, next) {
+    var ret = sendEmail();
+    if (ret != 0) res.send("Failed");
+    res.send("Success");
+}
+
+router.post('/sendEmail', function(req, res, next) {
+    var ret = sendEmail();
+    if (ret != 0) res.send({ response_type: "in_channel", text: "Fail Sending Email"});
+    res.send({ response_type: "in_channel", text: "Email Sent"});
+}
 
 module.exports = router;
