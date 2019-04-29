@@ -146,11 +146,9 @@ function sendEmail() {
     mongodb.connect(url, { useNewUrlParser: true }, async function(err, client) {
         if (err) {
             console.log("Error Connecting to Database");
-            return -1;
         }
 
         var db = client.db(database);
-        var collection = db.collection("schedule");
 
         var now = new Date();
         var weekNumber = getWeekNumber(now);
@@ -158,13 +156,19 @@ function sendEmail() {
         var textString = "Hello everyone,\n\nAgenda for " + (now.getMonth()+1) + "/" + (now.getDate()+1) + "/" + now.getUTCFullYear() + ":\n"
 
         try {
+            var collection = db.collection("schedule");
             var result = await collection.findOne({year: weekNumber[0], week: weekNumber[1]});
-            var targetList = await collection.findOne({mailList: "target"});
+            var collection = db.collection("listserv");
+            var targetList = await collection.findOne({valid: true}).toArray();
+            emailAddress = new Array();
+            for (i = 0; i < targetList.length; i++) {
+                emailAddress.push(targetList[i].Email);
+            }
             if (result == null) {
                 textString += "1. No update for this week\n\n"
                 var mailOptions = {
                     from: "Brain Mapping Lab",
-                    to: targetList.emailAddress,
+                    to: emailAddress,
                     subject: "Brain Mapping Lab Weekly Meeting Agenda",
                     text: textString + "Let me know if you would like to be added to the agenda.\n\nMay everyone have a good weekend!\n\nSincerely,\nJackson Cagle"
                 }
@@ -172,10 +176,7 @@ function sendEmail() {
                 transporter.sendMail(mailOptions, function (err, info) {
                     if (err) {
                         console.log(err)
-                        return -1;
                     }
-
-                    return 0;
                 })
             } else {
                 if (result.scheduleList.length == 0) {
@@ -187,7 +188,7 @@ function sendEmail() {
                 }
                 var mailOptions = {
                     from: process.env.MAIL,
-                    to: targetList.emailAddress,
+                    to: emailAddress,
                     subject: "Brain Mapping Lab Weekly Meeting Agenda",
                     text: textString + "Let me know if you would like to be added to the agenda.\n\nMay everyone have a good weekend!\n\nSincerely,\nJackson Cagle"
                 }
@@ -195,30 +196,24 @@ function sendEmail() {
                 transporter.sendMail(mailOptions, function (err, info) {
                     if (err) {
                         console.log(err)
-                        return -1;
                     }
                 })
                 console.log("Email Sent")
-                return 0;
             }
-            return 0;
         } catch(err) {
             console.log(err);
-            return -1;
         }
     });
 }
 
 router.get('/sendEmail', function(req, res, next) {
     var ret = sendEmail();
-    if (ret != 0) res.send("Failed");
-    else res.send("Success");
+    res.send("Success");
 });
 
 router.post('/sendEmail', function(req, res, next) {
     var ret = sendEmail();
-    if (ret != 0) res.send({ response_type: "in_channel", text: "Fail Sending Email"});
-    else res.send({ response_type: "in_channel", text: "Email Sent"});
+    res.send({ response_type: "in_channel", text: "Email Sent"});
 });
 
 module.exports = router;
