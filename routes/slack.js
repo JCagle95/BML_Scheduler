@@ -210,13 +210,13 @@ function sendEmail() {
 router.get('/sendEmail', function(req, res, next) {
     var ret = sendEmail();
     if (ret != 0) res.send("Failed");
-    res.send("Success");
+    else res.send("Success");
 });
 
 router.post('/sendEmail', function(req, res, next) {
     var ret = sendEmail();
     if (ret != 0) res.send({ response_type: "in_channel", text: "Fail Sending Email"});
-    res.send({ response_type: "in_channel", text: "Email Sent"});
+    else res.send({ response_type: "in_channel", text: "Email Sent"});
 });
 
 module.exports = router;
