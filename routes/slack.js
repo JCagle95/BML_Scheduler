@@ -146,7 +146,7 @@ function sendEmail() {
     mongodb.connect(url, { useNewUrlParser: true }, async function(err, client) {
         if (err) {
             console.log("Error Connecting to Database");
-            return;
+            return -1;
         }
 
         var db = client.db(database);
@@ -174,6 +174,8 @@ function sendEmail() {
                         console.log(err)
                         return -1;
                     }
+
+                    return 0;
                 })
             } else {
                 if (result.scheduleList.length == 0) {
