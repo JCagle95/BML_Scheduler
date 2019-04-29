@@ -5,16 +5,10 @@ var mongodb = require('mongodb').MongoClient;
 var ObjectID = require('mongodb').ObjectID;
 
 function getWeekNumber(d) {
-    // Copy date so don't modify original
     d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-    // Set to nearest Thursday: current date + 4 - current day number
-    // Make Sunday's day number 7
     d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-    // Get first day of year
     var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-    // Calculate full weeks to nearest Thursday
     var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
-    // Return array of year and week number
     return [d.getUTCFullYear(), weekNo];
 }
 
@@ -41,14 +35,14 @@ router.post('/add', function(req, res, next) {
         var weekNumber = getWeekNumber(now);
 
         try {
-            var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
+            var result = await collection.findOne({year: weekNumber[0], week: weekNumber[1]});
             if (result == null) {
                 var currentList = [req.body.text];
-                collection.insertOne({year: now.getUTCFullYear(), week: weekNumber, scheduleList: currentList});
+                collection.insertOne({year: weekNumber[0], week: weekNumber[1], scheduleList: currentList});
             } else {
                 var currentList = result.scheduleList;
                 currentList.push(req.body.text);
-                collection.updateOne({year: now.getUTCFullYear(), week: weekNumber}, { $set: {scheduleList: currentList}});
+                collection.updateOne({year: weekNumber[0], week: weekNumber[1]}, { $set: {scheduleList: currentList}});
             }
             res.send({ response_type: "in_channel", text: "The schedule for week " + weekNumber + " of year " + now.getUTCFullYear() + " is updated." });
         } catch(err) {
@@ -78,9 +72,9 @@ router.post('/list', function(req, res, next) {
         var weekNumber = getWeekNumber(now);
 
         try {
-            var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
+            var result = await collection.findOne({year: weekNumber[0], week: weekNumber[1]});
             if (result == null) {
-                res.send({ response_type: "in_channel", text: "The schedule for week Number " + weekNumber + " of year " + now.getUTCFullYear() + " is not created yet." });
+                res.send({ response_type: "in_channel", text: "The schedule for week Number " + weekNumber[1] + " of year " + weekNumber[0] + " is not created yet." });
             } else {
                 var replyString = "The following are the meeting schedules (not to order):\n"
                 for (i = 0; i < result.scheduleList.length; i++) {
@@ -117,14 +111,14 @@ router.post('/remove', function(req, res, next) {
         var weekNumber = getWeekNumber(now);
 
         try {
-            var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
+            var result = await collection.findOne({year: weekNumber[0], week: weekNumber[1]});
             if (result == null) {
-                res.send({ response_type: "in_channel", text: "The schedule for week Number " + weekNumber + " of year " + now.getUTCFullYear() + " is not created yet." });
+                res.send({ response_type: "in_channel", text: "The schedule for week Number " + weekNumber[1] + " of year " + weekNumber[0] + " is not created yet." });
             } else {
                 var currentList = result.scheduleList.filter(function(value, index, arr) {
                     return index != (id-1);
                 })
-                collection.updateOne({year: now.getUTCFullYear(), week: weekNumber}, { $set: {scheduleList: currentList}});
+                collection.updateOne({year: weekNumber[0], week: weekNumber[1]}, { $set: {scheduleList: currentList}});
                 res.send({ response_type: "in_channel", text: "Schedule ID " + id + " is removed." });
             }
             return;
@@ -136,24 +130,6 @@ router.post('/remove', function(req, res, next) {
     });
 });
 
-/* GET home page. */
-router.post('/interact', function(req, res, next) {
-    let payload = req.body;
-    res.sendStatus(200);
-
-    var botToken = req.app.get('bot-token');
-
-    if (payload.event.type === "app_mention") {
-        var resBody = {
-            "token": botToken,
-            "channel": payload.event.item.channel,
-            "text": "Hello World!"
-        }
-        sendRequest.write(resBody);
-        sendRequest.end();
-    }
-});
-
 router.get('/sendEmail', function(req, res, next) {
     var url = process.env.MONGODB_URI;
     var database = 'bml-meeting';
@@ -162,7 +138,7 @@ router.get('/sendEmail', function(req, res, next) {
     var transporter = mailer.createTransport({
         service: "gmail",
         auth: {
-            user: "brainmappingmac@gmail.com",
+            user: process.env.MAIL,
             pass: process.env.MAILPASS
         }
     });
@@ -179,10 +155,10 @@ router.get('/sendEmail', function(req, res, next) {
         var now = new Date();
         var weekNumber = getWeekNumber(now);
         var weekDay = now.getDay()
-        var textString = "Hello everyone,\n\nAgenda for " + (now.getMonth()+1) + "/" + (now.getDate()+1) + "/" + now.getUTCFullYear() + " Weekday " + weekDay + ":\n"
+        var textString = "Hello everyone,\n\nAgenda for " + (now.getMonth()+1) + "/" + (now.getDate()+1) + "/" + now.getUTCFullYear() + ":\n"
 
         try {
-            var result = await collection.findOne({year: now.getUTCFullYear(), week: weekNumber});
+            var result = await collection.findOne({year: weekNumber[0], week: weekNumber[1]});
             var targetList = await collection.findOne({mailList: "target"});
             if (result == null) {
                 textString += "1. No update for this week\n\n"
@@ -208,7 +184,7 @@ router.get('/sendEmail', function(req, res, next) {
                     }
                 }
                 var mailOptions = {
-                    from: "jcalge@ufl.edu",
+                    from: process.env.MAIL,
                     to: targetList.emailAddress,
                     subject: "Brain Mapping Lab Weekly Meeting Agenda",
                     text: textString + "Let me know if you would like to be added to the agenda.\n\nMay everyone have a good weekend!\n\nSincerely,\nJackson Cagle"
